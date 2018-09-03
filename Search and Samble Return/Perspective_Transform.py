@@ -10,7 +10,7 @@ import matplotlib.image as mpimg
 import numpy as np
 import cv2
 
-image = mpimg.imread('1.jpg')
+image = mpimg.imread('angle_example.jpg')
 
 # Rover yaw values will come as floats from 0 to 360
 # Generate a random value in this range
@@ -91,6 +91,14 @@ def pix_to_world(xpix, ypix, xpos, ypos, yaw, world_size, scale):
     y_pix_world = np.clip(np.int_(ypix_tran), 0, world_size - 1)
     # Return the result
     return x_pix_world, y_pix_world
+
+def to_polar_coords(xpix, ypix):
+    # Calculate distance to each pixel
+    dist = np.sqrt(xpix**2 + ypix**2)
+    # Calculate angle using arctangent function
+    angles = np.arctan2(ypix, xpix)
+    return dist, angles
+
 # TODO:
 # Define a box in source (original) and 
 # destination (desired) coordinates
@@ -145,7 +153,6 @@ plt.xlim(0, 160)
 plt.title('Rover-Centric Map', fontsize=20)
 #plt.show() # Uncomment if running on your local machi
 
-xpix, ypix = rover_coords(colorsel)
 # Generate 200 x 200 pixel worldmap
 worldmap = np.zeros((200, 200))
 scale = 10
@@ -175,3 +182,25 @@ ax2.set_xlim(0, 200)
 
 plt.subplots_adjust(left=0.1, right=1, top=0.9, bottom=0.1)
 #plt.show() # Uncomment if running on your local machine
+
+
+distances, angles = to_polar_coords(xpix, ypix) # Convert to polar coords
+avg_angle = np.mean(angles) # Compute the average angle
+
+# Do some plotting
+fig = plt.figure(figsize=(12,9))
+plt.subplot(221)
+plt.imshow(image)
+plt.subplot(222)
+plt.imshow(warped)
+plt.subplot(223)
+plt.imshow(colorsel, cmap='gray')
+plt.subplot(224)
+plt.plot(xpix, ypix, '.')
+plt.ylim(-160, 160)
+plt.xlim(0, 160)
+arrow_length = 100
+x_arrow = arrow_length * np.cos(avg_angle)
+y_arrow = arrow_length * np.sin(avg_angle)
+plt.arrow(0, 0, x_arrow, y_arrow, color='red', zorder=2, head_width=10, width=2)
+plt.show()
